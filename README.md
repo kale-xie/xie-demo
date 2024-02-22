@@ -1,5 +1,7 @@
 # wananzhuo
 
+# 参考'https://github.com/yechaoa/wanandroid_flutter'编写练手用
+
 A new Flutter project.
 
 ## Getting Started
