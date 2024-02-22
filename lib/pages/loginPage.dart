@@ -7,6 +7,7 @@ import 'package:wananzhuo/http/httpUtil.dart';
 import 'package:wananzhuo/main.dart';
 import 'package:wananzhuo/res/colors.dart';
 import 'package:wananzhuo/util/ToastUtil.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../res/strings.dart';
 
@@ -17,7 +18,8 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixin {
+class _LoginPageState extends State<LoginPage>
+    with SingleTickerProviderStateMixin {
   var tabs = <Tab>[];
   String btnText = '登录';
   String bottomText = '没有账号？注册';
@@ -135,69 +137,62 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                               SizedBox(height: 10),
                             ]),
                       ),
-                      
                     ))),
-
-                    Positioned(
-                      top: 40,
-                      left: MediaQuery.of(context).size.width / 2 - 35,
-                      
-                      
-                      
-                      child: Center(
-                        child: Container(
-                          width: 70,
-                          height: 70,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white,
-                            image: DecorationImage(image:AssetImage('lib\res\images\ic_logo.png'),
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                      //左右、上下阴影的距离
-                      offset: Offset(0, 0),
-                      //阴影颜色
-                      color: Colors.grey,
-                      //模糊距离
-                      blurRadius: 8,
-                      //不模糊距离
-                      spreadRadius: 1,
-                    ),
-                          ]
+            Positioned(
+                top: 40,
+                left: MediaQuery.of(context).size.width / 2 - 35,
+                child: Center(
+                    child: Container(
+                  width: 70,
+                  height: 70,
+                  decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white,
+                      image: DecorationImage(
+                        image: AssetImage('lib\res\images\ic_logo.png'),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          //左右、上下阴影的距离
+                          offset: Offset(0, 0),
+                          //阴影颜色
+                          color: Colors.grey,
+                          //模糊距离
+                          blurRadius: 8,
+                          //不模糊距离
+                          spreadRadius: 1,
                         ),
-                      ))),
-
-                      Positioned(
-                        bottom: 20,
-                        left: 130,
-                        right: 130,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).primaryColor),
-                          child: Container(
-                            padding: EdgeInsets.all(10),
-                            child: Text(
-                              btnText,
-                              style: TextStyle(color: YColors.color_fff,fontSize: 20),
-                            ),
-                          ),
-                          onPressed: () {
-                            if (_key.currentState!.validate()) {
-                              _key.currentState!.save();
-                              print(username! + "--" + password! + "**" + rePassword!);
-                              doRequest();
-                            } else {
-                              setState(() {
-                                autoValidate = true;
-                              });
-                            }
-                          }, )
-                      )
-                    
-                    
+                      ]),
+                ))),
+            Positioned(
+                bottom: 20,
+                left: 130,
+                right: 130,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).primaryColor),
+                  child: Container(
+                    padding: EdgeInsets.all(10),
+                    child: Text(
+                      btnText,
+                      style: TextStyle(color: YColors.color_fff, fontSize: 20),
+                    ),
+                  ),
+                  onPressed: () {
+                    if (_key.currentState!.validate()) {
+                      _key.currentState!.save();
+                      print(username! + "--" + password! + "**" + rePassword!);
+                      doRequest();
+                    } else {
+                      setState(() {
+                        autoValidate = true;
+                      });
+                    }
+                  },
+                ))
           ],
         ),
-          GestureDetector(
+        GestureDetector(
           child: Text(
             bottomText,
             style: TextStyle(color: YColors.color_fff),
@@ -242,14 +237,23 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     return null;
   }
 
-   Future doRequest() async {
+  Future doRequest() async {
     var data;
     if (visible)
       data = {'username': username, 'password': password};
     else
-      data = {'username': username, 'password': password, 'repassword': rePassword};
+      data = {
+        'username': username,
+        'password': password,
+        'repassword': rePassword
+      };
 
     var response = await HttpUtil().post(visible ? Api.LOGIN : Api.REGISTER, data: data);
+
+    List<String> cookies = response.headers['set-cookie'];
+    print('这是持久化的-----------------------$cookies');
+    SharedPreferences sp = await SharedPreferences.getInstance();
+    sp.setStringList('cookies',cookies);
     Map userMap = json.decode(response.toString());
     print('这是登录成功的标识$userMap');
     var userEntity = UserEntity.fromJson(userMap);

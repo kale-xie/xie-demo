@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter_swiper_null_safety/flutter_swiper_null_safety.dart';
 import 'package:wananzhuo/common/api.dart';
@@ -11,6 +12,7 @@ import 'package:wananzhuo/http/httpUtil.dart';
 import 'package:flutter/material.dart';
 import 'package:wananzhuo/res/colors.dart';
 import 'package:wananzhuo/util/ToastUtil.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import './loginPage.dart';
 
@@ -46,12 +48,17 @@ class _HomePageState extends State<HomePage> {
 
   void getHttp() async {
     try {
+      Map<String, String> mapto = new Map();
+      SharedPreferences sp = await SharedPreferences.getInstance();
+      List<String>? cookie = sp.getStringList('cookies');
+      mapto['Cookie'] = cookie.toString();
+      print('刷新后-----------------------$cookie');
       var bannerResponse = await HttpUtil().get(Api.BANNER);
       Map bannerMap = json.decode(bannerResponse.toString());
       var bannerEntity = BannerEntity.fromJson(bannerMap);
 
       var articleResponse =
-          await HttpUtil().get(Api.ARTICLE_LIST + "$_page/json");
+          await HttpUtil().get(Api.ARTICLE_LIST + "$_page/json",options: Options(headers: mapto) );
       Map articleMap = json.decode(articleResponse.toString());
       var articleEntity = ArticleEntity.fromJson(articleMap);
       print('执行抓取广告');
@@ -76,7 +83,7 @@ class _HomePageState extends State<HomePage> {
             safeArea: false,
           ),
           footer: const PhoenixFooter(
-            skyColor:Colors.white,// YColors.colorPrimary,
+            skyColor: Colors.white, // YColors.colorPrimary,
             position: IndicatorPosition.locator,
           ),
           onRefresh: () async {
@@ -149,6 +156,7 @@ class _HomePageState extends State<HomePage> {
                 : Icon(Icons.favorite_border),
             tooltip: '收藏',
             onPressed: () {
+              print('是否收藏成功---------------------${articleDatas[i].collect}');
               if (articleDatas[i].collect!) {
                 cancelCollect(articleDatas[i].id!);
               } else {
@@ -156,45 +164,46 @@ class _HomePageState extends State<HomePage> {
               }
             },
           ),
-            title: Text(
-              articleDatas[i].title!,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-             subtitle: Padding(
-              padding: EdgeInsets.only(top: 10.0),
-              child: Row(
-                children: <Widget>[
-                  Container(
-                      constraints: BoxConstraints(maxWidth: 150),
-                      padding: EdgeInsets.symmetric(horizontal: 6),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: Theme.of(context).primaryColor,
-                          width: 1.0,
-                        ),
-                        borderRadius: BorderRadius.circular((20.0)), // 圆角度
+          title: Text(
+            articleDatas[i].title!,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          subtitle: Padding(
+            padding: EdgeInsets.only(top: 10.0),
+            child: Row(
+              children: <Widget>[
+                Container(
+                    constraints: BoxConstraints(maxWidth: 150),
+                    padding: EdgeInsets.symmetric(horizontal: 6),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Theme.of(context).primaryColor,
+                        width: 1.0,
                       ),
-                      child: Text(articleDatas[i].superChapterName!,
-                          style: TextStyle(color: Theme.of(context).primaryColor),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1)),
-                  Container(
-                    margin: EdgeInsets.only(left: 10),
-                    child: Text(articleDatas[i].author!),
-                  ),
-                ],
-              ),
+                      borderRadius: BorderRadius.circular((20.0)), // 圆角度
+                    ),
+                    child: Text(articleDatas[i].superChapterName!,
+                        style: TextStyle(color: Theme.of(context).primaryColor),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1)),
+                Container(
+                  margin: EdgeInsets.only(left: 10),
+                  child: Text(articleDatas[i].author!),
+                ),
+              ],
             ),
-            trailing: Icon(Icons.chevron_right),
+          ),
+          trailing: Icon(Icons.chevron_right),
         ),
       ),
-       onTap: () {
+      onTap: () {
         if (0 == 1) return;
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ArticleDetail(title: articleDatas[i].title!, url: articleDatas[i].link!),
+            builder: (context) => ArticleDetail(
+                title: articleDatas[i].title!, url: articleDatas[i].link!),
           ),
         );
       },
@@ -248,7 +257,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future addCollect(int id) async {
-    var collectResponse = await HttpUtil().post(Api.COLLECT + '$id/json');
+    Map<String, String> mapto = new Map();
+    SharedPreferences sp = await SharedPreferences.getInstance();
+    List<String>? cookie = sp.getStringList('cookies');
+    mapto['Cookie'] = cookie.toString();
+    print('收藏后的-----------------------$cookie');
+    var collectResponse = await HttpUtil()
+        .post(Api.COLLECT + '$id/json', options: Options(headers: mapto));
+    print('收藏后的-----------------------${Api.COLLECT + '$id/json'}');
     Map map = json.decode(collectResponse.toString());
     var entity = CommonEntity.fromJson(map);
     if (entity.errorCode == -1001) {
@@ -264,8 +280,13 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future cancelCollect(int id) async {
+    Map<String, String> mapto = new Map();
+    SharedPreferences sp = await SharedPreferences.getInstance();
+    List<String>? cookie = sp.getStringList('cookies');
+    mapto['Cookie'] = cookie.toString();
+    print('取消收藏后的-----------------------$cookie');
     var collectResponse =
-        await HttpUtil().post(Api.UN_COLLECT_ORIGIN_ID + '$id/json');
+        await HttpUtil().post(Api.UN_COLLECT_ORIGIN_ID + '$id/json',options: Options(headers: mapto));
     Map map = json.decode(collectResponse.toString());
     var entity = CommonEntity.fromJson(map);
     if (entity.errorCode == -1001) {
@@ -290,8 +311,8 @@ class _HomePageState extends State<HomePage> {
         hasMore = false;
       }
     });
-    
   }
+
   @override
   void dispose() {
     _easyRefreshController?.dispose();

@@ -31,14 +31,16 @@ class HttpUtil {
 
     dio = Dio(options);
 
-    final cookieJar = CookieJar();
+    // final cookieJar = CookieJar();                             
     // final co = getAppDocsDir();
     // final cookieJar = PersistCookieJar(ignoreExpires: true,storage: FileStorage(co.toString() + "/.cookies/"));
 
-    dio.interceptors.add(CookieManager(cookieJar));
-    print('返回的cookieJar--------------${cookieJar.loadForRequest(Uri.parse(Api.BASE_URL)).then((value) => print(value))}');
-    // print(Uri.base);
-    print('请求之后options-----------${options.headers}');
+    // dio.interceptors.add(CookieManager(cookieJar));
+
+
+    // print('返回的cookieJar--------------${cookieJar.loadForRequest(Uri.parse(Api.BASE_URL)).then((value) => print(value))}');
+    // // print(Uri.base);
+    // print('请求之后options-----------${options.headers}');
 
     dio.interceptors.add(InterceptorsWrapper(onRequest: (RequestOptions options, RequestInterceptorHandler handler){
 
@@ -79,7 +81,7 @@ class HttpUtil {
     try {
       response = await dio.post(url, queryParameters: data, options: options, cancelToken: cancelToken);
       print('post success---------${response.data}');
-      print('post success---------headers内容:${response.headers}');
+      print('post success---------headers内容:${response.headers['set-cookie']}');
       print('post success---------headers内容:${response.requestOptions}');
       print('post success---------headers内容:${response.realUri}');
     } on DioException catch (e) {
