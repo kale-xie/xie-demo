@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ffi';
 import 'package:dio/dio.dart';
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter_swiper_null_safety/flutter_swiper_null_safety.dart';
@@ -31,6 +32,7 @@ class _HomePageState extends State<HomePage> {
 
   int _page = 0;
   bool hasMore = true;
+  bool collect = false;
 
   @override
   void initState() {
@@ -133,7 +135,7 @@ class _HomePageState extends State<HomePage> {
                     delegate: SliverChildBuilderDelegate((context, index) {
                   return getRow(index, articleDatas.length);
                 }, childCount: articleDatas.length)),
-                const FooterLocator.sliver()
+                const FooterLocator.sliver(),
               ],
             );
           }),
@@ -141,14 +143,20 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget? getRow(int i, int length) {
+
+    
+     //articleDatas[i].collect! ;
+    print('是否刷新getRow-----------------------------');
+    
     if (length == 0) return null;
+   
 
     return GestureDetector(
       child: Container(
         padding: EdgeInsets.symmetric(vertical: 10, horizontal: 5),
         child: ListTile(
           leading: IconButton(
-            icon: articleDatas != null && articleDatas[i].collect!
+            icon: articleDatas[i].collect!
                 ? Icon(
                     Icons.favorite,
                     color: Theme.of(context).primaryColor,
@@ -158,10 +166,34 @@ class _HomePageState extends State<HomePage> {
             onPressed: () {
               print('是否收藏成功---------------------${articleDatas[i].collect}');
               if (articleDatas[i].collect!) {
+                //                 collect=!collect;
+                // print('collect----------------------------------------------------------执行$collect');
+                setState(() {
+                  
+                 print('collect----------------------------------------------------------执行$articleDatas[i].collect');
+                });
+                articleDatas[i].collect!=!articleDatas[i].collect!;
+            
                 cancelCollect(articleDatas[i].id!);
               } else {
+                // collect=!collect;
+                // print('collect----------------------------------------------------------执行$collect');
+                setState(() {
+                   
+                  
+                  print('collect----------------------------------------------------------执行$articleDatas[i].collect');
+                });
+                articleDatas[i].collect!=!articleDatas[i].collect!;
+
                 addCollect(articleDatas[i].id!);
               }
+
+
+
+
+
+
+              
             },
           ),
           title: Text(
